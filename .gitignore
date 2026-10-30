@@ -1,0 +1,29 @@
+# Build output
+/bin/
+/obj/
+
+# IDE / editor
+/.idea/
+/.vs/
+/.vscode/
+*.user
+*.suo
+*.DotSettings.user
+
+# Support folders (never built or committed)
+/.REFERENCE/
+/.Assets/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Release packages
+out/
+__pycache__/
+
+# Window additions build output
+/Window Additions/bin/
+/Window Additions/obj/
+/.serena/

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>SeneaLUIUnlocker</AssemblyName>
+    <RootNamespace>SeneaLUIUnlocker</RootNamespace>
+    <Version>1.0.0</Version>
+    <DefineConstants Condition="'$(ReleaseBuild)' != 'true'">$(DefineConstants);TEST_BUILD</DefineConstants>
+  </PropertyGroup>
+
+  <Import Project="References.props" />
+
+  <ItemGroup>
+    <Compile Remove="Window Additions\**" />
+    <None Remove="Window Additions\**" />
+    <InternalsVisibleTo Include="SeneaLUIUnlocker.WindowAdditions" />
+  </ItemGroup>
+
+  <Target Name="WritePluginVersion" BeforeTargets="BeforeCompile;CoreCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)PluginVersion.g.cs" Lines="namespace SeneaLUIUnlocker { internal static class PluginVersion { public const string Value = &quot;$(Version)&quot;%3B } }" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)PluginVersion.g.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- The window additions reference this plugin's dll, so they are built after it, into the same output folder. -->
+  <Target Name="BuildWindowAdditions" AfterTargets="Build">
+    <MSBuild Projects="Window Additions\SeneaLUIUnlocker.WindowAdditions.csproj" Targets="Restore" Properties="Configuration=$(Configuration);ReleaseBuild=$(ReleaseBuild);Version=$(Version);RestoreSession=$([System.Guid]::NewGuid())" />
+    <MSBuild Projects="Window Additions\SeneaLUIUnlocker.WindowAdditions.csproj" Targets="Build" Properties="Configuration=$(Configuration);ReleaseBuild=$(ReleaseBuild);Version=$(Version)" />
+  </Target>
+
+  <!-- The translator files ship beside the plugin dll, in the Languages folder the plugin reads. -->
+  <ItemGroup>
+    <LanguageFiles Include="Languages\*.json" />
+  </ItemGroup>
+  <Target Name="CopyLanguages" AfterTargets="Build">
+    <Copy SourceFiles="@(LanguageFiles)" DestinationFolder="$(OutDir)Languages" />
+  </Target>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The parts that draw inside SeneaL UI's own windows using types only SeneaL UI 1.2.0 and later have. A separate dll, loaded by the plugin only when SeneaL UI has those types, so on older builds no loaded assembly holds a type that cannot load. -->
+  <PropertyGroup>
+    <AssemblyName>SeneaLUIUnlocker.WindowAdditions</AssemblyName>
+    <RootNamespace>SeneaLUIUnlocker</RootNamespace>
+    <OutputPath>..\bin\$(Configuration)\</OutputPath>
+    <DefineConstants Condition="'$(ReleaseBuild)' != 'true'">$(DefineConstants);TEST_BUILD</DefineConstants>
+  </PropertyGroup>
+
+  <Import Project="..\References.props" />
+
+  <ItemGroup>
+    <Reference Include="SeneaLUIUnlocker" HintPath="..\bin\$(Configuration)\SeneaLUIUnlocker.dll" Private="false" />
+    <EmbeddedResource Include="..\Presets\SeneaL UI Unlocker.slui" LogicalName="SeneaLUIUnlocker.Preset.slui" />
+    <EmbeddedResource Include="..\Presets\SeneaL UI Unlocker Looks.txt" LogicalName="SeneaLUIUnlocker.PresetLooks.txt" />
+  </ItemGroup>
+
+</Project>

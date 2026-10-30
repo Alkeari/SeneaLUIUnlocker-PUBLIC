@@ -1,0 +1,77 @@
+<Project>
+
+  <!-- References shared by the plugin and its window additions, resolved from the game and the Thunderstore Mod Manager profiles. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ValheimGameDir Condition="'$(ValheimGameDir)' == ''">$(VALHEIM_GAME_DIR)</ValheimGameDir>
+    <ValheimProfilesDir Condition="'$(ValheimProfilesDir)' == ''">$(APPDATA)\Thunderstore Mod Manager\DataFolder\Valheim\profiles</ValheimProfilesDir>
+    <ValheimProfileDir Condition="'$(ValheimProfileDir)' == ''">$(ValheimProfilesDir)\Multiplayer</ValheimProfileDir>
+    <ValheimManaged>$(ValheimGameDir)\valheim_Data\Managed</ValheimManaged>
+    <BepInExDir>$(ValheimProfileDir)\BepInEx</BepInExDir>
+  </PropertyGroup>
+
+  <!-- A Release dll names no folder of the machine that built it: no PDB path, and source paths mapped to /_/. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildProjectDirectory)=/_/</PathMap>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx" HintPath="$(BepInExDir)\core\BepInEx.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(BepInExDir)\core\0Harmony.dll" Private="false" />
+    <Reference Include="assembly_valheim" HintPath="$(ValheimManaged)\assembly_valheim.dll" Private="false" Publicize="true" />
+    <Reference Include="assembly_utils" HintPath="$(ValheimManaged)\assembly_utils.dll" Private="false" Publicize="true" />
+    <Reference Include="assembly_guiutils" HintPath="$(ValheimManaged)\assembly_guiutils.dll" Private="false" />
+    <Reference Include="Splatform" HintPath="$(ValheimManaged)\Splatform.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(ValheimManaged)\UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ValheimManaged)\UnityEngine.CoreModule.dll" Private="false" />
+
+    <Reference Include="UnityEngine.ParticleSystemModule" HintPath="$(ValheimManaged)\UnityEngine.ParticleSystemModule.dll" Private="false" />
+    <Reference Include="UnityEngine.PhysicsModule" HintPath="$(ValheimManaged)\UnityEngine.PhysicsModule.dll" Private="false" />
+    <Reference Include="gui_framework" HintPath="$(ValheimManaged)\gui_framework.dll" Private="false" />
+    <Reference Include="UnityEngine.UIModule" HintPath="$(ValheimManaged)\UnityEngine.UIModule.dll" Private="false" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(ValheimManaged)\Unity.TextMeshPro.dll" Private="false" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(ValheimManaged)\UnityEngine.TextRenderingModule.dll" Private="false" />
+    <Reference Include="UnityEngine.UI" HintPath="$(ValheimManaged)\UnityEngine.UI.dll" Private="false" />
+    <Reference Include="UnityEngine.UnityWebRequestModule" HintPath="$(ValheimManaged)\UnityEngine.UnityWebRequestModule.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- SeneaL UI moves between install folders across mod managers and releases, so the newest copy anywhere under the profiles or the game is referenced. -->
+  <UsingTask TaskName="PickNewestFile" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Newest ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        Newest = Files.Select(f => f.GetMetadata("FullPath")).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault() ?? "";
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="ReferenceSeneaLUI" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <SeneaLUICandidate Include="$(ValheimProfilesDir)\**\SeneaL-UI.dll;$(ValheimGameDir)\**\SeneaL-UI.dll" />
+    </ItemGroup>
+    <Error Condition="'@(SeneaLUICandidate)' == ''" Text="SeneaL-UI.dll was not found under $(ValheimProfilesDir) or $(ValheimGameDir)." />
+    <PickNewestFile Files="@(SeneaLUICandidate)">
+      <Output TaskParameter="Newest" PropertyName="SeneaLUIDll" />
+    </PickNewestFile>
+    <Message Importance="high" Text="SeneaL-UI.dll: $(SeneaLUIDll)" />
+    <ItemGroup>
+      <Reference Include="SeneaL-UI" HintPath="$(SeneaLUIDll)" Private="false" Publicize="true" />
+    </ItemGroup>
+  </Target>
+
+</Project>
